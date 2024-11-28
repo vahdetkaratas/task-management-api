@@ -6,7 +6,6 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "jest"
-
   },
   "keywords": [],
   "author": "",
@@ -23,7 +22,9 @@
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.5",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
