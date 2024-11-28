@@ -1,31 +1,28 @@
 const { Task, User, TaskAssignment } = require('../../models');
+const io = require('../server');
 
-// Create a new task and assign users
 exports.createTask = async (req, res) => {
     const { title, description, priority, dueDate, assignedUserIds } = req.body;
 
     try {
-        // Create the task in the database
-        const task = await Task.create({
-            title,
-            description,
-            priority,
-            dueDate,
-            userId: req.user.id // The logged-in user creating the task
-        });
+        const task = await Task.create({ title, description, priority, dueDate, userId: req.user.id });
 
-        // Assign users to the task if provided
         if (assignedUserIds && assignedUserIds.length) {
             const assignments = assignedUserIds.map(userId => ({ taskId: task.id, userId }));
             await TaskAssignment.bulkCreate(assignments);
+
+            // Notify assigned users
+            assignedUserIds.forEach(userId => {
+                io.emit(`user:${userId}`, { message: 'New task assigned', task });
+            });
         }
 
         res.status(201).json({ message: 'Task created successfully', task });
     } catch (error) {
-        console.error('Error creating task:', error.message);
         res.status(500).json({ message: 'Error creating task', error: error.message });
     }
 };
+
 
 // Retrieve tasks for the logged-in user
 exports.getTasks = async (req, res) => {
