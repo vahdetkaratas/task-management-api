@@ -20,5 +20,7 @@ router.post('/', authenticate, logAction('Create Task'), createTask);
 // Restrict delete route to admins
 // Log task deletion
 router.delete('/:id', authenticate, logAction('Delete Task'), checkRoles(['admin', 'moderator']), deleteTask);
+router.put('/:id', authenticate, updateTask);
+router.get('/:id/history', authenticate, getTaskHistory);
 
 module.exports = router;

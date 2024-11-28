@@ -28,6 +28,8 @@ module.exports = (sequelize, DataTypes) => {
 };
 
 
+
 Task.associate = (models) => {
   Task.belongsToMany(models.User, { through: models.TaskAssignment, foreignKey: 'taskId' });
+  Task.hasMany(models.TaskHistory, { foreignKey: 'taskId' });
 };

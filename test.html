@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Task Collaboration</title>
+</head>
+<body>
+    <h1>Task Collaboration</h1>
+    <div>
+        <label for="taskId">Task ID:</label>
+        <input type="text" id="taskId" placeholder="Enter task ID" />
+        <button id="joinTask">Join Task</button>
+        <button id="leaveTask">Leave Task</button>
+    </div>
+    <hr />
+    <div>
+        <h2>Task Editor</h2>
+        <textarea id="taskContent" placeholder="Edit task here"></textarea>
+        <button id="updateTask">Update Task</button>
+    </div>
+    <hr />
+    <div>
+        <h2>Real-Time Updates</h2>
+        <ul id="updates"></ul>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:5000'); // Connect to WebSocket server
+
+        // Join a task room
+        document.getElementById('joinTask').addEventListener('click', () => {
+            const taskId = document.getElementById('taskId').value;
+            if (taskId) {
+                socket.emit('joinTask', taskId);
+                addUpdate(`Joined task ${taskId}`);
+            }
+        });
+
+        // Leave a task room
+        document.getElementById('leaveTask').addEventListener('click', () => {
+            const taskId = document.getElementById('taskId').value;
+            if (taskId) {
+                socket.emit('leaveTask', taskId);
+                addUpdate(`Left task ${taskId}`);
+            }
+        });
+
+        // Update task content
+        document.getElementById('updateTask').addEventListener('click', () => {
+            const taskId = document.getElementById('taskId').value;
+            const taskContent = document.getElementById('taskContent').value;
+            if (taskId && taskContent) {
+                socket.emit('editTask', taskId, { content: taskContent });
+                addUpdate(`Updated task ${taskId}: ${taskContent}`);
+            }
+        });
+
+        // Listen for real-time updates
+        socket.on('taskUpdated', (data) => {
+            addUpdate(`Task ${data.taskId} updated: ${JSON.stringify(data.taskData)}`);
+        });
+
+        // Listen for user joined notifications
+        socket.on('userJoined', (data) => {
+            addUpdate(`User ${data.userId} joined task ${data.taskId}`);
+        });
+
+        // Listen for user left notifications
+        socket.on('userLeft', (data) => {
+            addUpdate(`User ${data.userId} left task ${data.taskId}`);
+        });
+
+        // Helper function to display updates
+        function addUpdate(message) {
+            const updatesList = document.getElementById('updates');
+            const listItem = document.createElement('li');
+            listItem.textContent = message;
+            updatesList.appendChild(listItem);
+        }
+    </script>
+</body>
+</html>
