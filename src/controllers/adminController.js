@@ -25,11 +25,12 @@ exports.deleteUser = (req, res) => {
 
     const [deletedUser] = users.splice(userIndex, 1);
 
-    // Notify the user
+    // Notify the user with a customized email
     sendEmail(
         deletedUser.email,
         'Account Deletion Notice',
-        `Dear ${deletedUser.name}, your account has been deleted by the admin.`
+        'accountDeletion',
+        { name: deletedUser.name }
     );
 
     res.status(200).json({ message: 'User deleted successfully' });

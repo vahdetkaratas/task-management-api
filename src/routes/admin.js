@@ -12,7 +12,7 @@ const router = express.Router();
 router.get('/logs', authenticate, checkRoles(['admin']), getLogs);
 router.get('/tasks', authenticate, checkRoles(['admin']), getAllTasks);
 router.delete('/users/:id', authenticate, logAction('Delete User'), checkRoles(['admin']), deleteUser);
-router.get('/users', authenticate, checkRoles(['admin']), pagination('users'), getUsers);
+router.get('/users', authenticate, checkRoles(['admin']), pagination('users', ['role']), getUsers);
 
 
 
