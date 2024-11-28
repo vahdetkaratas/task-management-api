@@ -7,7 +7,12 @@ const pagination = require('../middlewares/paginationMiddleware');
 
 const router = express.Router();
 
-router.get('/', authenticate, pagination('tasks', ['status', 'priority']), getTasks);
+router.get(
+    '/',
+    authenticate,
+    pagination('tasks', ['status'], ['priority', 'dueDate']),
+    getTasks
+);
 
 // Log task creation
 router.post('/', authenticate, logAction('Create Task'), createTask);

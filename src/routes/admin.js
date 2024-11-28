@@ -4,6 +4,7 @@ const authenticate = require('../middlewares/authMiddleware');
 const { checkRoles } = require('../middlewares/authMiddleware');
 const { getLogs } = require('../controllers/auditController');
 const logAction = require('../middlewares/logMiddleware');
+const pagination = require('../middlewares/paginationMiddleware');
 
 
 const router = express.Router();

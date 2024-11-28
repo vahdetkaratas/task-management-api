@@ -1,4 +1,4 @@
-module.exports = (dataKey, filterableFields = []) => {
+module.exports = (dataKey, filterableFields = [], rangeFields = []) => {
     return (req, res, next) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -7,11 +7,22 @@ module.exports = (dataKey, filterableFields = []) => {
 
         let data = req[dataKey];
 
-        // Apply filtering
+        // Apply exact filtering
         if (filterableFields.length) {
             filterableFields.forEach(field => {
                 if (req.query[field]) {
                     data = data.filter(item => item[field] === req.query[field]);
+                }
+            });
+        }
+
+        // Apply range filtering
+        if (rangeFields.length) {
+            rangeFields.forEach(field => {
+                if (req.query[`${field}Min`] || req.query[`${field}Max`]) {
+                    const min = parseFloat(req.query[`${field}Min`]) || -Infinity;
+                    const max = parseFloat(req.query[`${field}Max`]) || Infinity;
+                    data = data.filter(item => item[field] >= min && item[field] <= max);
                 }
             });
         }
