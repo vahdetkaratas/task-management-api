@@ -18,9 +18,10 @@ module.exports = (req, res, next) => {
 };
 
 // Middleware to check user roles
-module.exports.checkRole = (requiredRole) => {
+module.exports.checkRoles = (requiredRoles) => {
     return (req, res, next) => {
-        if (req.user.role !== requiredRole) {
+        // Check if the user's role matches any of the required roles
+        if (!requiredRoles.includes(req.user.role)) {
             return res.status(403).json({ message: 'Access forbidden: Insufficient privileges.' });
         }
         next();

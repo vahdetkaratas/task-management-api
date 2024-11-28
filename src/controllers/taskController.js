@@ -16,10 +16,12 @@ exports.createTask = (req, res) => {
 };
 
 exports.getTasks = (req, res) => {
-    // Filter tasks belonging to the logged-in user
-    const userTasks = tasks.filter(task => task.userId === req.user.id);
-    res.status(200).json(userTasks);
+    // Attach tasks to the request for pagination middleware
+    req.tasks = tasks.filter(task => task.userId === req.user.id);
+
+    res.status(200).json(req.paginatedResults);
 };
+
 exports.deleteTask = (req, res) => {
     const taskId = parseInt(req.params.id);
 
