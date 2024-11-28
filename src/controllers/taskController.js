@@ -20,3 +20,15 @@ exports.getTasks = (req, res) => {
     const userTasks = tasks.filter(task => task.userId === req.user.id);
     res.status(200).json(userTasks);
 };
+exports.deleteTask = (req, res) => {
+    const taskId = parseInt(req.params.id);
+
+    // Check if task exists
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) {
+        return res.status(404).json({ message: 'Task not found' });
+    }
+
+    tasks.splice(taskIndex, 1);
+    res.status(200).json({ message: 'Task deleted successfully' });
+};
