@@ -1,28 +1,49 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class TaskHistory extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // TaskHistory is linked to a Task
+      TaskHistory.belongsTo(models.Task, { foreignKey: 'taskId', as: 'task' });
+
+      // TaskHistory is linked to a User who made the change
+      TaskHistory.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
     }
   }
-  TaskHistory.init({
-    taskId: DataTypes.INTEGER,
-    userId: DataTypes.INTEGER,
-    changeType: DataTypes.STRING,
-    oldValue: DataTypes.STRING,
-    newValue: DataTypes.STRING,
-    changeDate: DataTypes.DATE
-  }, {
-    sequelize,
-    modelName: 'TaskHistory',
-  });
+
+  TaskHistory.init(
+    {
+      taskId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Optional: Null if system-generated change
+      },
+      changeType: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      oldValue: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      newValue: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      changeDate: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      sequelize,
+      modelName: 'TaskHistory',
+    }
+  );
+
   return TaskHistory;
 };

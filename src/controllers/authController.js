@@ -2,10 +2,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User } = require('../../models');
 
-
-// Temporary in-memory "database"
-let users = []; // Replace with actual database later
-
 exports.signup = async (req, res) => {
     const { name, email, password, role } = req.body;
 
@@ -23,12 +19,13 @@ exports.signup = async (req, res) => {
         res.status(500).json({ message: 'Error signing up', error: error.message });
     }
 };
+
 exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Find the user
-        const user = users.find(user => user.email === email);
+        // Find the user in the database
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
@@ -39,11 +36,16 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // Generate a JWT
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // Generate a JWT with role
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
         res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
         res.status(500).json({ message: 'Error logging in', error: error.message });
+
     }
 };

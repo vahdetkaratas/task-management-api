@@ -5,6 +5,8 @@ const taskRoutes = require('./routes/tasks');
 const adminRoutes = require('./routes/admin');
 const swaggerDocs = require('./swagger');
 
+require('dotenv').config();
+
 
 const app = express();
 swaggerDocs(app); // Register Swagger UI

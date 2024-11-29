@@ -1,24 +1,31 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class TaskAssignment extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // Many-to-Many: Users assigned to Tasks
+      TaskAssignment.belongsTo(models.Task, { foreignKey: 'taskId', as: 'task' });
+      TaskAssignment.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
     }
   }
-  TaskAssignment.init({
-    taskId: DataTypes.INTEGER,
-    userId: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'TaskAssignment',
-  });
+
+  TaskAssignment.init(
+    {
+      taskId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      modelName: 'TaskAssignment',
+    }
+  );
+
   return TaskAssignment;
 };

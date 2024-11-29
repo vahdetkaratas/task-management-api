@@ -10,17 +10,19 @@ module.exports = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        req.user = decoded; // Add decoded data (user ID and role) to request object
         next();
     } catch (error) {
-        res.status(400).json({ message: 'Invalid token.' });
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token expired.' });
+        }
+        return res.status(400).json({ message: 'Invalid token.' });
     }
 };
 
 // Middleware to check user roles
 module.exports.checkRoles = (requiredRoles) => {
     return (req, res, next) => {
-        // Check if the user's role matches any of the required roles
         if (!requiredRoles.includes(req.user.role)) {
             return res.status(403).json({ message: 'Access forbidden: Insufficient privileges.' });
         }

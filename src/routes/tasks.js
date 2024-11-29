@@ -1,9 +1,17 @@
 const express = require('express');
-const { createTask, getTasks, deleteTask, updateTask, getTaskHistory } = require('../controllers/taskController');
+const {
+    createTask,
+    getTasks,
+    deleteTask,
+    updateTask,
+    getTaskHistory,
+    getTaskById,
+} = require('../controllers/taskController');
 const authenticate = require('../middlewares/authMiddleware');
 const { checkRoles } = require('../middlewares/authMiddleware');
 const logAction = require('../middlewares/logMiddleware');
 const pagination = require('../middlewares/paginationMiddleware');
+const { Task } = require('../../models'); // Import Task for pagination
 
 const router = express.Router();
 
@@ -27,31 +35,26 @@ const router = express.Router();
  *       - name: page
  *         in: query
  *         description: Page number for pagination
- *         required: false
  *         schema:
  *           type: integer
  *       - name: limit
  *         in: query
  *         description: Number of tasks per page
- *         required: false
  *         schema:
  *           type: integer
  *       - name: status
  *         in: query
  *         description: Filter tasks by status
- *         required: false
  *         schema:
  *           type: string
  *       - name: priorityMin
  *         in: query
  *         description: Minimum priority for filtering
- *         required: false
  *         schema:
  *           type: integer
  *       - name: priorityMax
  *         in: query
  *         description: Maximum priority for filtering
- *         required: false
  *         schema:
  *           type: integer
  *     responses:
@@ -69,7 +72,7 @@ const router = express.Router();
 router.get(
     '/',
     authenticate,
-    pagination('tasks', ['status'], ['priority', 'dueDate']),
+    pagination(Task, ['status'], ['priority', 'dueDate']),
     getTasks
 );
 
@@ -91,17 +94,13 @@ router.get(
  *             properties:
  *               title:
  *                 type: string
- *                 example: New Task
  *               description:
  *                 type: string
- *                 example: Task description
  *               priority:
  *                 type: integer
- *                 example: 2
  *               dueDate:
  *                 type: string
  *                 format: date
- *                 example: 2024-12-01
  *               assignedUserIds:
  *                 type: array
  *                 items:
@@ -115,6 +114,32 @@ router.get(
  *         description: Unauthorized
  */
 router.post('/', authenticate, logAction('Create Task'), createTask);
+
+/**
+ * @swagger
+ * /api/tasks/{id}:
+ *   get:
+ *     summary: Get a task by ID
+ *     description: Retrieve a specific task by its ID.
+ *     tags: [Tasks]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Task ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Task retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Task not found
+ */
+router.get('/:id', authenticate, getTaskById);
 
 /**
  * @swagger

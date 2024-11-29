@@ -1,35 +1,51 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Task extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // Task belongs to a user
+      Task.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+
+      // Task has many histories
+      Task.hasMany(models.TaskHistory, { foreignKey: 'taskId', as: 'histories' });
+
+      // Task has many assignments
+      Task.hasMany(models.TaskAssignment, {
+        foreignKey: 'taskId',
+        as: 'assignments', // Explicit alias for consistency
+      });
     }
   }
-  Task.init({
-    title: DataTypes.STRING,
-    description: DataTypes.TEXT,
-    status: DataTypes.STRING,
-    priority: DataTypes.INTEGER,
-    dueDate: DataTypes.DATE,
-    userId: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'Task',
-  });
+
+  Task.init(
+    {
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      priority: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      dueDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      modelName: 'Task',
+    }
+  );
+
   return Task;
-};
-
-
-
-Task.associate = (models) => {
-  Task.belongsToMany(models.User, { through: models.TaskAssignment, foreignKey: 'taskId' });
-  Task.hasMany(models.TaskHistory, { foreignKey: 'taskId' });
 };

@@ -1,55 +1,78 @@
-module.exports = (dataKey, filterableFields = [], rangeFields = []) => {
-    return (req, res, next) => {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const startIndex = (page - 1) * limit;
-        const endIndex = page * limit;
+const { Op } = require('sequelize');
 
-        let data = req[dataKey];
+module.exports = (model, filterableFields = [], rangeFields = []) => {
+  return async (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
-        // Apply exact filtering
-        if (filterableFields.length) {
-            filterableFields.forEach(field => {
-                if (req.query[field]) {
-                    data = data.filter(item => item[field] === req.query[field]);
-                }
-            });
+    try {
+      // Build the where clause dynamically
+      const where = {};
+
+      // Exact match filters
+      filterableFields.forEach(field => {
+        if (req.query[field]) {
+          where[field] = req.query[field];
         }
+      });
 
-        // Apply range filtering
-        if (rangeFields.length) {
-            rangeFields.forEach(field => {
-                if (req.query[`${field}Min`] || req.query[`${field}Max`]) {
-                    const min = parseFloat(req.query[`${field}Min`]) || -Infinity;
-                    const max = parseFloat(req.query[`${field}Max`]) || Infinity;
-                    data = data.filter(item => item[field] >= min && item[field] <= max);
-                }
-            });
+      // Range filters
+      rangeFields.forEach(field => {
+        if (req.query[`${field}Min`] || req.query[`${field}Max`]) {
+          where[field] = {
+            ...(req.query[`${field}Min`] && { [Op.gte]: req.query[`${field}Min`] }),
+            ...(req.query[`${field}Max`] && { [Op.lte]: req.query[`${field}Max`] }),
+          };
         }
+      });
 
-        // Apply sorting
-        if (req.query.sortBy) {
-            const sortKey = req.query.sortBy;
-            const sortOrder = req.query.order === 'desc' ? -1 : 1;
+      // Sorting
+      const order = [];
+      if (req.query.sortBy) {
+        const sortOrder = req.query.order === 'desc' ? 'DESC' : 'ASC';
+        order.push([req.query.sortBy, sortOrder]);
+      }
 
-            data.sort((a, b) => {
-                if (a[sortKey] < b[sortKey]) return -1 * sortOrder;
-                if (a[sortKey] > b[sortKey]) return 1 * sortOrder;
-                return 0;
-            });
-        }
+      // Fetch total count and paginated results
+      const total = await model.count({ where });
+      const data = await model.findAll({
+        where,
+        limit,
+        offset,
+        order,
+        include: [ // Include associated models
+          {
+            model: require('../../models').User,
+            as: 'user',
+            attributes: ['id', 'name', 'email'],
+          },
+          {
+            model: require('../../models').TaskHistory,
+            as: 'histories',
+            attributes: ['id', 'changeType', 'oldValue', 'newValue', 'changeDate'],
+          },
+        ],
+      });
 
-        const results = {};
-        if (endIndex < data.length) {
-            results.next = { page: page + 1, limit };
-        }
-        if (startIndex > 0) {
-            results.previous = { page: page - 1, limit };
-        }
+      // Pagination metadata
+      const results = {
+        data,
+        total,
+      };
+      if (offset + limit < total) {
+        results.next = { page: page + 1, limit };
+      }
+      if (offset > 0) {
+        results.previous = { page: page - 1, limit };
+      }
 
-        results.data = data.slice(startIndex, endIndex);
-        req.paginatedResults = results;
+      req.paginatedResults = results;
 
-        next();
-    };
+      next();
+    } catch (error) {
+      console.error('Error in pagination middleware:', error.message);
+      res.status(500).json({ message: 'Error processing pagination', error: error.message });
+    }
+  };
 };
